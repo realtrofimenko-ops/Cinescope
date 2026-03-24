@@ -1,0 +1,5 @@
+pytest
+requests
+faker
+pytest-xdist
+pytest-html
