@@ -1,13 +1,9 @@
 .idea/
 .vscode/
 .venv/
-.DS_Store
-/venv/
+venv/
 __pycache__/
 *.pyc
-*.db
-*.xlsx
 *.log
-*.csv
-*.env
 .env
+.DS_Store
