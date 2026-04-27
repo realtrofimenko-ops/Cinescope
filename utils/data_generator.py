@@ -37,7 +37,7 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_email():
-        return f"{int(time.time())}_{fake.email()}"
+        return f"{fake.email()}"
 
     @staticmethod
     def generate_random_name():

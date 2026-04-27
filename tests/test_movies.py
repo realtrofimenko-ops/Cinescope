@@ -146,7 +146,7 @@ def test_get_movies_with_filters_parametrized(api_manager, params, check_func):
     ]
 )
 @pytest.mark.slow
-def test_delete_movie_by_roles(request, user_fixture, expected_status, created_movie):
+def test_delete_movie_by_roles(request, user_fixture, expected_status, created_movie, super_admin):
     user = request.getfixturevalue(user_fixture)
 
     movie_id = created_movie
@@ -155,11 +155,10 @@ def test_delete_movie_by_roles(request, user_fixture, expected_status, created_m
         movie_id,
         expected_status=expected_status
     )
+
     print("STATUS:", response.status_code)
     print("BODY:", response.text)
 
-    # если удаление успешно — можно дополнительно проверить что фильма нет
+    # ✅ проверяем через супер-админа
     if expected_status == 200:
-        user.api.movies_api.get_movie_by_id(movie_id, expected_status=404)
-
-    print(response.status_code)
+        super_admin.api.movies_api.get_movie_by_id(movie_id, expected_status=404)

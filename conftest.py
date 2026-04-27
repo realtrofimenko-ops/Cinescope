@@ -1,5 +1,6 @@
 import pytest
 import requests
+import random
 
 from clients.api_manager import ApiManager
 from clients.auth_api import AuthAPI
@@ -9,6 +10,10 @@ from utils.data_generator import DataGenerator
 from utils.roles import Roles
 from utils.user_creds import SuperAdminCreds
 from models.user_model import UserModel
+import uuid
+from faker import Faker
+
+fake = Faker()
 
 
 @pytest.fixture(scope="session")
@@ -31,24 +36,27 @@ def api_manager(session):
 
 
 @pytest.fixture
-def created_movie(api_manager):
-    from utils.data_generator import DataGenerator
+def created_movie(super_admin):
+    data = {
+        "name": f"TestMovie{random.randint(1000,9999)}",
+        "imageUrl": "https://example.com/image.png",
+        "price": 100,
+        "description": "Test",
+        "location": "MSK",
+        "published": True,
+        "genreId": 1
+    }
 
-    data = DataGenerator.generate_movie()
-
-    response = api_manager.movies_api.create_movie(data)
+    response = super_admin.api.movies_api.create_movie(data)
     movie_id = response.json()["id"]
 
     yield movie_id
 
-    # безопасное удаление
+    # ✅ ВАЖНО: безопасный cleanup (не падает, если уже удалили)
     try:
-        api_manager.movies_api.delete_movie(movie_id)
+        super_admin.api.movies_api.delete_movie(movie_id, expected_status=200)
     except AssertionError:
-        # если уже удалён — ок
         pass
-SUPER_ADMIN_EMAIL = EMAIL
-SUPER_ADMIN_PASSWORD = PASSWORD
 
 
 @pytest.fixture(scope="session")
@@ -61,15 +69,12 @@ def super_admin(api_manager):
     )
     return user
 @pytest.fixture
-def test_user() -> UserModel:
-    password = DataGenerator.generate_random_password()
-
+def test_user():
     return UserModel(
-        email=DataGenerator.generate_random_email(),
-        fullName=DataGenerator.generate_random_name(),
-        password=password,
-        passwordRepeat=password,
-        roles=[Roles.USER]
+        email=f"{uuid.uuid4()}@test.com",   # ✅ ФИКС
+        fullName=fake.name(),
+        password="123Qweasd",
+        passwordRepeat="123Qweasd"
     )
 @pytest.fixture
 def creation_user_data(test_user: UserModel) -> UserModel:
