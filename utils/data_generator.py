@@ -1,5 +1,9 @@
 import random
+from faker import Faker
+import string
+import time
 
+fake = Faker()
 
 class DataGenerator:
     @staticmethod
@@ -13,3 +17,28 @@ class DataGenerator:
             "published": True,
             "genreId": 1
         }
+
+    @staticmethod
+    def generate_user():
+        password = "Test1234Aa"
+
+        return {
+            "email": fake.email(),
+            "fullName": fake.name(),
+            "password": password,
+            "roles": ["USER"]
+        }
+
+    @staticmethod
+    def generate_random_password(length=10):
+        letters = string.ascii_letters
+        digits = string.digits
+        return ''.join(random.choice(letters + digits) for _ in range(length))
+
+    @staticmethod
+    def generate_random_email():
+        return f"{int(time.time())}_{fake.email()}"
+
+    @staticmethod
+    def generate_random_name():
+        return fake.name()

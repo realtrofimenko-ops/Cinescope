@@ -1,4 +1,6 @@
 import logging
+from pydantic import BaseModel
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +15,14 @@ class CustomRequester:
         url = f"{self.base_url}{endpoint}"
 
         logger.info(f"{method} {url}")
-        response = self.session.request(method, url, **kwargs)
-        logger.info(f"Response: {response.status_code} {response.text}")
 
-        assert response.status_code == expected_status, \
-            f"Expected {expected_status}, got {response.status_code}: {response.text}"
+        data = kwargs.get("json")
+
+        if isinstance(data, BaseModel):
+            kwargs["json"] = data.model_dump()
+
+        response = self.session.request(method, url, **kwargs)
+
+        assert response.status_code == expected_status
 
         return response

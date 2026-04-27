@@ -1,6 +1,8 @@
 from utils.data_generator import DataGenerator
+import pytest
+pytestmark = pytest.mark.api
 
-
+@pytest.mark.slow
 def test_get_movies(api_manager):
     response = api_manager.movies_api.get_movies()
     data = response.json()
@@ -91,3 +93,73 @@ def test_get_movie_not_found(api_manager):
     )
 
     assert response.status_code == 404
+import pytest
+
+
+@pytest.mark.parametrize(
+    "params, check_func",
+    [
+        (
+            {"minPrice": 10, "maxPrice": 100},
+            lambda movie: 10 <= movie["price"] <= 100
+        ),
+        (
+            {"locations": ["MSK"]},
+            lambda movie: movie["location"] == "MSK"
+        ),
+        (
+            {"genreId": 1},
+            lambda movie: movie["genreId"] == 1
+        ),
+    ],
+    ids=[
+        "filter_by_price",
+        "filter_by_location",
+        "filter_by_genre"
+    ]
+)
+def test_get_movies_with_filters_parametrized(api_manager, params, check_func):
+    response = api_manager.movies_api.get_movies(params=params)
+    data = response.json()
+
+    assert "movies" in data, "Ответ должен содержать список movies"
+
+    movies = data["movies"]
+
+    # если вдруг пусто — это не ошибка фильтра
+    if not movies:
+        pytest.skip("Нет фильмов для данного фильтра")
+
+    for movie in movies:
+        assert check_func(movie), f"Фильм не соответствует фильтру: {movie}"
+@pytest.mark.parametrize(
+    "user_fixture, expected_status",
+    [
+        ("super_admin", 200),
+        ("admin_user", 403),
+        ("common_user", 403),
+    ],
+    ids=[
+        "super_admin_can_delete",
+        "admin_cannot_delete",
+        "user_cannot_delete"
+    ]
+)
+@pytest.mark.slow
+def test_delete_movie_by_roles(request, user_fixture, expected_status, created_movie):
+    user = request.getfixturevalue(user_fixture)
+
+    movie_id = created_movie
+
+    response = user.api.movies_api.delete_movie(
+        movie_id,
+        expected_status=expected_status
+    )
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text)
+
+    # если удаление успешно — можно дополнительно проверить что фильма нет
+    if expected_status == 200:
+        user.api.movies_api.get_movie_by_id(movie_id, expected_status=404)
+
+    print(response.status_code)
