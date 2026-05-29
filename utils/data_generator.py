@@ -2,6 +2,8 @@ import random
 from faker import Faker
 import string
 import time
+import datetime
+from uuid import uuid4
 
 fake = Faker()
 
@@ -42,3 +44,17 @@ class DataGenerator:
     @staticmethod
     def generate_random_name():
         return fake.name()
+
+    @staticmethod
+    def generate_user_data():
+        return {
+            'id': f'{uuid4()}',
+            'email': DataGenerator.generate_random_email(),
+            'full_name': DataGenerator.generate_random_name(),
+            'password': DataGenerator.generate_random_password(),
+            'created_at': datetime.datetime.now(),
+            'updated_at': datetime.datetime.now(),
+            'verified': False,
+            'banned': False,
+            'roles': '{USER}'
+        }

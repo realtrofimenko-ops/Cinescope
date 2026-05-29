@@ -1,0 +1,2 @@
+201
+{"id":51730,"name":"TestMovie2579","price":100,"description":"Test description","imageUrl":"https://example.com/image.png","location":"MSK","published":true,"rating":5.5,"genreId":1,"createdAt":"2026-05-29T15:27:19.620Z","genre":{"name":"Драма"}}

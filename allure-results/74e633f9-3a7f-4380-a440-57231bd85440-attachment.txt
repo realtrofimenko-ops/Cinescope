@@ -1,0 +1,4 @@
+201
+{"id":51733,"name":"TestMovie2271","price":100,"description":"Test description","imageUrl":"https://example.com/image.png","location":"MSK","published":true,"rating":5.5,"genreId":1,"createdAt":"2026-05-29T15:27:23.106Z","genre":{"name":"Драма"}}
+STATUS: 200
+BODY: {"id":51733,"name":"TestMovie2271","price":100,"description":"Test description","imageUrl":"https://example.com/image.png","location":"MSK","published":true,"rating":5.5,"genreId":1,"createdAt":"2026-05-29T15:27:23.106Z","reviews":[],"genre":{"name":"Драма"}}

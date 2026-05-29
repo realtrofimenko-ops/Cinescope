@@ -12,6 +12,9 @@ from utils.user_creds import SuperAdminCreds
 from models.user_model import UserModel
 import uuid
 from faker import Faker
+from db_client import get_db_session
+from db_requester.db_helpers import DBHelper
+from utils.data_generator import DataGenerator
 
 fake = Faker()
 
@@ -37,24 +40,32 @@ def api_manager(session):
 
 @pytest.fixture
 def created_movie(super_admin):
+
     data = {
         "name": f"TestMovie{random.randint(1000,9999)}",
         "imageUrl": "https://example.com/image.png",
         "price": 100,
-        "description": "Test",
+        "description": "Test description",
         "location": "MSK",
         "published": True,
-        "genreId": 1
+        "genreId": 1,
+        "rating": 5.5
     }
 
     response = super_admin.api.movies_api.create_movie(data)
+
+    print(response.status_code)
+    print(response.text)
+
     movie_id = response.json()["id"]
 
     yield movie_id
 
-    # ✅ ВАЖНО: безопасный cleanup (не падает, если уже удалили)
     try:
-        super_admin.api.movies_api.delete_movie(movie_id, expected_status=200)
+        super_admin.api.movies_api.delete_movie(
+            movie_id,
+            expected_status=200
+        )
     except AssertionError:
         pass
 
@@ -140,3 +151,31 @@ def print_hello():
 @pytest.mark.usefixtures("print_hello")
 def test_usefixtures_example():
     assert True
+
+@pytest.fixture(scope="function")
+def db_session():
+
+    session = get_db_session()
+
+    yield session
+
+    session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session):
+
+    helper = DBHelper(db_session)
+
+    return helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+
+    user = db_helper.create_test_user(
+        DataGenerator.generate_user_data()
+    )
+
+    yield user
+
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)

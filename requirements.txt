@@ -3,3 +3,6 @@ requests
 faker
 pytest-xdist
 pytest-html
+allure-pytest
+pydantic
+pytest-check

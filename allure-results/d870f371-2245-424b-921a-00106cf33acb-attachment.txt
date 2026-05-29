@@ -1,0 +1,4 @@
+201
+{"id":51729,"name":"TestMovie5263","price":100,"description":"Test description","imageUrl":"https://example.com/image.png","location":"MSK","published":true,"rating":5.5,"genreId":1,"createdAt":"2026-05-29T15:23:04.526Z","genre":{"name":"Драма"}}
+STATUS: 403
+BODY: {"message":"Forbidden resource","error":"Forbidden","statusCode":403}

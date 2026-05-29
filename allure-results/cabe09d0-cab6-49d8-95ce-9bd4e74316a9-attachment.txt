@@ -1,0 +1,21 @@
+
+TEST_USER JSON (exclude_unset=True):
+{
+  "email": "96ec9256-1624-4136-a8ab-5709813c272f@test.com",
+  "fullName": "Hunter Brown",
+  "password": "123Qweasd",
+  "passwordRepeat": "123Qweasd"
+}
+
+CREATION_USER_DATA JSON:
+{
+  "email": "96ec9256-1624-4136-a8ab-5709813c272f@test.com",
+  "fullName": "Hunter Brown",
+  "password": "123Qweasd",
+  "passwordRepeat": "123Qweasd",
+  "roles": [
+    "USER"
+  ],
+  "verified": true,
+  "banned": false
+}

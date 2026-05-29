@@ -1,39 +1,84 @@
-from utils.data_generator import DataGenerator
+import datetime
+import random
+
+import allure
 import pytest
+
+from utils.data_generator import DataGenerator
+from db_client import get_db_session
+from db_models.movies import MovieDBModel
+from db_requester.db_helpers import DBHelper
+from models.movie_model import MoviesResponseModel
+
 pytestmark = pytest.mark.api
 
+@allure.epic("Movies")
+@allure.feature("Movies list")
+@allure.story("Получение списка фильмов")
+@allure.title("Проверка получения списка фильмов")
+@pytest.mark.smoke
 @pytest.mark.slow
 def test_get_movies(api_manager):
-    response = api_manager.movies_api.get_movies()
-    data = response.json()
 
-    assert "movies" in data
-    assert "count" in data
-    assert isinstance(data["movies"], list)
-    assert "page" in data
-    assert "pageSize" in data
-    assert "pageCount" in data
+    with allure.step("Отправляем запрос на получение фильмов"):
+        response = api_manager.movies_api.get_movies()
+
+    with allure.step("Проверяем статус код"):
+        assert response.status_code == 200
+
+    with allure.step("Проверяем pydantic модель"):
+        data = MoviesResponseModel(**response.json())
+
+    with allure.step("Проверяем структуру ответа"):
+        assert isinstance(data.movies, list)
+        assert data.count >= 0
+        assert data.page >= 1
 
 
+@allure.epic("Movies")
+@allure.feature("Movie by id")
+@allure.story("Получение фильма")
+@allure.title("Проверка фильма по id")
+@pytest.mark.regression
 def test_get_movie_by_id(api_manager, created_movie):
+
     movie_id = created_movie
 
-    response = api_manager.movies_api.get_movie_by_id(movie_id)
-    data = response.json()
+    with allure.step(f"Получаем фильм с id {movie_id}"):
+        response = api_manager.movies_api.get_movie_by_id(movie_id)
 
-    assert data["id"] == movie_id
+    with allure.step("Проверяем статус код"):
+        assert response.status_code == 200
+
+    with allure.step("Проверяем id фильма"):
+        data = response.json()
+        assert data["id"] == movie_id
 
 
+@allure.epic("Movies")
+@allure.feature("Create movie")
+@allure.story("Создание фильма")
+@allure.title("Проверка создания фильма")
+@pytest.mark.smoke
 def test_create_movie(api_manager):
-    data = DataGenerator.generate_movie()
 
-    response = api_manager.movies_api.create_movie(data)
-    movie = response.json()
+    with allure.step("Генерируем данные фильма"):
+        data = DataGenerator.generate_movie()
 
-    assert "id" in movie
-    assert movie["name"] == data["name"]
+    with allure.step("Создаем фильм"):
+        response = api_manager.movies_api.create_movie(data)
 
-    api_manager.movies_api.delete_movie(movie["id"])
+    with allure.step("Проверяем статус код"):
+        assert response.status_code == 201
+
+    with allure.step("Проверяем тело ответа"):
+        movie = response.json()
+
+        assert "id" in movie
+        assert movie["name"] == data["name"]
+
+    with allure.step("Удаляем тестовый фильм"):
+        api_manager.movies_api.delete_movie(movie["id"])
 
 
 def test_update_movie(api_manager, created_movie):
@@ -46,17 +91,57 @@ def test_update_movie(api_manager, created_movie):
 
     assert updated["name"] == update_data["name"]
 
+@allure.epic("Movies")
+@allure.feature("Delete movie")
+@allure.story("Удаление фильма")
+@allure.title("Проверка удаления фильма")
+@pytest.mark.db
+@pytest.mark.regression
+def test_delete_movie(api_manager, super_admin):
 
-def test_delete_movie(api_manager, created_movie):
-    movie_id = created_movie
+    session = get_db_session()
 
-    api_manager.movies_api.delete_movie(movie_id)
+    db_helper = DBHelper(session)
 
-    # проверка
-    api_manager.movies_api.get_movie_by_id(
-        movie_id,
-        expected_status=404
+    movie_id = random.randint(10000, 99999)
+
+    # Проверяем есть ли фильм в БД
+    movie = db_helper.get_movie_by_id(movie_id)
+
+    # Если фильма нет — создаем
+    if movie is None:
+        movie = MovieDBModel(
+            id=movie_id,
+            name=f"Test Movie {random.randint(1, 999999)}",
+            price=100,
+            description="Test description",
+            image_url="https://test.com/image.jpg",
+            location="SPB",
+            published=True,
+            rating=5.0,
+            genre_id=1,
+            created_at=datetime.datetime.now()
+        )
+
+        session.add(movie)
+        session.commit()
+
+    # Проверяем что фильм существует
+    movie = db_helper.get_movie_by_id(movie_id)
+
+    assert movie is not None
+
+    # Удаляем через API
+    delete_response = api_manager.movies_api.delete_movie(
+        movie_id=movie_id
     )
+
+    assert delete_response.status_code == 200
+
+    # Проверяем что фильм удалился из БД
+    deleted_movie = db_helper.get_movie_by_id(movie_id)
+
+    assert deleted_movie is None
 
 
 def test_get_movies_with_filter(api_manager):
@@ -93,7 +178,6 @@ def test_get_movie_not_found(api_manager):
     )
 
     assert response.status_code == 404
-import pytest
 
 
 @pytest.mark.parametrize(
