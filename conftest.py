@@ -48,7 +48,7 @@ def created_movie(super_admin):
         "description": "Test description",
         "location": "MSK",
         "published": True,
-        "genreId": 1,
+        "genreId": 3,
         "rating": 5.5
     }
 

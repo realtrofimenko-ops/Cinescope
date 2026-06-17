@@ -17,7 +17,7 @@ class DataGenerator:
             "description": "Test Description",
             "location": "MSK",
             "published": True,
-            "genreId": 1
+            "genreId": 3
         }
 
     @staticmethod

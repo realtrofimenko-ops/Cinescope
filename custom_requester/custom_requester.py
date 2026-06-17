@@ -23,6 +23,12 @@ class CustomRequester:
 
         response = self.session.request(method, url, **kwargs)
 
+        print("\n====================")
+        print("URL:", url)
+        print("STATUS:", response.status_code)
+        print("BODY:", response.text)
+        print("====================\n")
+
         assert response.status_code == expected_status
 
         return response
